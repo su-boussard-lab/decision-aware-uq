@@ -1,0 +1,15 @@
+# POU, bootstrap ensemble. Outputs: results/ensemble/pou/
+# Requires the restricted cohort.csv and dataset.csv in data/POU_Data; skipped otherwise.
+defaults: base.yaml
+
+name: pou
+output_dir: results/ensemble
+data:
+  dataset: pou
+  root: data/POU_Data
+  val_size: 0.15
+  test_size: 0.20
+model:
+  standardize: false
+bnn:
+  enabled: false

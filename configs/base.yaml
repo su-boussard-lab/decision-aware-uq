@@ -1,0 +1,117 @@
+# Shared settings for all four manuscript settings. Each setting config inherits
+# this file via `defaults: base.yaml` and overrides only what differs.
+
+name: base
+seed: 42
+output_dir: results
+project_root: .           # relative data paths resolve against this directory
+save_artifacts: true      # save per-member probabilities to artifacts/bundles.pkl
+
+model:
+  kind: lasso             # L1-penalised logistic regression
+  params:
+    penalty: l1
+    C: 0.1
+    max_iter: 5000
+    solver: liblinear
+  standardize: false
+
+ensemble:                 # bootstrap ensemble (used when bnn.enabled: false)
+  n_bootstrap: 100
+  sample_size: null       # null -> size of the training set
+  stratify: false
+  max_redraws: 10         # redraws allowed for single-class resamples
+  parallel: true          # identical results to serial fitting
+  n_jobs: 2               # -1 -> all cores
+  blas_threads_per_worker: 1
+  verify_parallel: false  # refit serially and assert equality (slow)
+
+bnn:                      # Bayesian logistic regression (used when bnn.enabled: true)
+  enabled: false
+  prior: scale_mixture    # scale_mixture | scaled_gaussian
+  prior_scale: null       # scaled_gaussian only; null -> 1/sqrt(n_features)
+  mixture_pi: 0.07
+  mixture_sigma1: 1.0
+  mixture_sigma2: 0.001
+  lr: 0.001
+  epochs: 50
+  batch_size: 1024
+  predict_batch_size: 4096
+  kl_warmup_frac: 0.2     # linear KL warm-up over this fraction of training
+  init_rho: -5.0
+  grad_clip: 5.0
+  num_samples: 100        # posterior draws, each a global weight sample
+  min_val_auroc: 0.55     # logs an error if validation AUROC falls below this
+  device: cpu
+
+threshold:
+  rule: f1                # f1 (maximised on validation) | fixed
+  value: null             # used when rule: fixed
+
+uncertainty:
+  metrics:
+    - sd_logit            # SD of member logits
+    - sd_perp             # geometry-adjusted SD_logit
+    - sd_prob             # SD of member probabilities
+    - null_mi             # mutual information
+    - null_entropy        # predictive entropy H(p-bar)
+    - null_dm             # decision margin -|p-bar - tau|
+    - null_dm_logit       # decision margin on the logit scale
+  rank_reference: val     # percentile ranks against the validation split
+  orthogonalization:
+    n_knots: 5            # natural cubic spline knots (at quantiles)
+    predictor: logit      # spline predictor: logit(p-bar) | proba
+    standardize: false
+    fit_split: val        # val (main analysis) | self (in-sample sensitivity)
+
+analysis:
+  threshold_sweep:
+    enabled: true
+    min: 0.05
+    max: 0.50
+    n: 46
+  deferral:
+    enabled: true
+    coverages: [0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 1.0]
+    metrics: [sd_logit, sd_perp, null_entropy, null_dm_logit]
+  decision_impact:        # Table 3; uses the deferral metrics above
+    enabled: true
+    snb_coverage: 0.95
+    sens_coverage: 0.50
+    n_boot: 2000
+    group_column: null    # meta_test patient-id column; null -> resample rows
+  residual_coverage: true
+  risk_coverage: true
+  calibration: true
+  error_separation:
+    enabled: true
+    q_correct: 0.75       # validation-derived bounds for the threshold-transfer table
+    q_incorrect: 0.25
+    include_minmax: false
+  residual_uncertainty:
+    enabled: true
+    n_bins: 20
+    loess_frac: 0.4
+    n_pbar_strata: 10
+    max_scatter_points: 4000
+  uncertainty_groups:
+    enabled: true
+    low_pct: 20.0
+    high_pct: 20.0
+    n_calibration_bins: 10
+    calibration_max_probability: 0.5
+    brier_n_boot: 1000
+    threshold_min: 0.01
+    threshold_max: 0.50
+    threshold_n: 50
+    fixed_denominator: true
+  n_bootstrap_ci: 2000
+  ci_level: 0.95
+
+plots:
+  enabled: true
+  format: pdf
+  dpi: 300
+  context: paper
+  metric_order: epistemic_vs_aleatoric      # pure_vs_null | epistemic_vs_aleatoric
+  group_metric_order: epistemic_vs_aleatoric

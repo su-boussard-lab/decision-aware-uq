@@ -1,0 +1,12 @@
+# DPR, Bayesian logistic regression. Outputs: results/blr/dpr/
+defaults: base.yaml
+
+name: dpr
+output_dir: results/blr
+data:
+  dataset: dpr
+  root: data/DPR_Data/preprocessed_data/dpr_preprocessed
+model:
+  standardize: true
+bnn:
+  enabled: true

@@ -1,0 +1,12 @@
+# DPR, bootstrap ensemble. Outputs: results/ensemble/dpr/
+defaults: base.yaml
+
+name: dpr
+output_dir: results/ensemble
+data:
+  dataset: dpr
+  root: data/DPR_Data/preprocessed_data/dpr_preprocessed
+model:
+  standardize: true
+bnn:
+  enabled: false

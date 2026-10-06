@@ -1,0 +1,10 @@
+results/
+manuscript/
+__pycache__/
+.idea/
+*.pyc
+.DS_Store
+# Extracted DPR splits (tracked as dpr_preprocessed.zip)
+data/DPR_Data/preprocessed_data/dpr_preprocessed/
+# Restricted POU data
+data/POU_Data/
